@@ -15,6 +15,38 @@ export default function Home() {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const playAlarm = () => {
+    try {
+      const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const audioCtx = new AudioContextClass();
+      
+      // Create a sequence of beeps for 2 seconds
+      const duration = 2;
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+      
+      // Siren effect
+      oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.5);
+      oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 1.0);
+      oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 1.5);
+      oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 2.0);
+
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + duration);
+    } catch (e) {
+      console.error('Audio context error:', e);
+    }
+  };
+
   // Screen Wake Lock API
   useEffect(() => {
     let wakeLock: any = null;
@@ -61,6 +93,7 @@ export default function Home() {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             setIsRunning(false);
+            playAlarm();
             return 0;
           }
           return prev - 1;
