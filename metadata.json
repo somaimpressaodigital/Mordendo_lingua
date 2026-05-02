@@ -1,0 +1,6 @@
+{
+  "name": "Placar e Cronômetro Profissional",
+  "description": "Um aplicativo de controle de tempo e pontuação para competições, com temporizador de 1 minuto e ajuste de nomes de times.",
+  "requestFramePermissions": ["screen-wake-lock"],
+  "majorCapabilities": []
+}
