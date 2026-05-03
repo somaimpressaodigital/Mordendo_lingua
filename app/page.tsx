@@ -9,9 +9,10 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [isRunning, setIsRunning] = useState(false);
   const [isWakeLockActive, setIsWakeLockActive] = useState(false);
+  const [showGamesTracker, setShowGamesTracker] = useState(true);
   
-  const [teamA, setTeamA] = useState({ name: 'TIME A', score: 0, isEditing: false });
-  const [teamB, setTeamB] = useState({ name: 'TIME B', score: 0, isEditing: false });
+  const [teamA, setTeamA] = useState({ name: 'TIME A', score: 0, games: 0, isEditing: false });
+  const [teamB, setTeamB] = useState({ name: 'TIME B', score: 0, games: 0, isEditing: false });
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -128,6 +129,14 @@ export default function Home() {
     }
   };
 
+  const updateGames = (team: 'A' | 'B', delta: number) => {
+    if (team === 'A') {
+      setTeamA((prev) => ({ ...prev, games: Math.max(0, prev.games + delta) }));
+    } else {
+      setTeamB((prev) => ({ ...prev, games: Math.max(0, prev.games + delta) }));
+    }
+  };
+
   const toggleEdit = (team: 'A' | 'B') => {
     if (team === 'A') {
       setTeamA((prev) => ({ ...prev, isEditing: !prev.isEditing }));
@@ -153,6 +162,18 @@ export default function Home() {
           <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase opacity-60">Mordendo a Língua</span>
         </div>
         <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setShowGamesTracker(!showGamesTracker)}
+            className={`flex items-center gap-2 px-4 py-3 rounded-full border transition-all text-xs font-bold uppercase tracking-wider ${
+              showGamesTracker 
+              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' 
+              : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-700'
+            }`}
+          >
+            <div className={`w-2.5 h-2.5 rounded-full ${showGamesTracker ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'}`} />
+            Jogos Ganhos
+          </button>
+
           <button 
             onClick={() => setIsWakeLockActive(!isWakeLockActive)}
             className={`flex items-center gap-3 px-6 py-3 rounded-full border transition-all text-xs md:text-sm font-bold uppercase tracking-wider ${
@@ -254,7 +275,9 @@ export default function Home() {
             team={teamA} 
             side="left"
             isLast={false}
+            showGames={showGamesTracker}
             onUpdateScore={(d: number) => updateScore('A', d)} 
+            onUpdateGames={(d: number) => updateGames('A', d)}
             onNameChange={(n: string) => handleNameChange('A', n)}
           />
 
@@ -263,7 +286,9 @@ export default function Home() {
             team={teamB} 
             side="right"
             isLast={true}
+            showGames={showGamesTracker}
             onUpdateScore={(d: number) => updateScore('B', d)} 
+            onUpdateGames={(d: number) => updateGames('B', d)}
             onNameChange={(n: string) => handleNameChange('B', n)}
           />
         </div>
@@ -281,11 +306,47 @@ export default function Home() {
   );
 }
 
-function TeamPanel({ team, side, isLast, onUpdateScore, onNameChange }: any) {
+function TeamPanel({ team, side, isLast, showGames, onUpdateScore, onUpdateGames, onNameChange }: any) {
   return (
     <div className={`flex flex-col items-center justify-center p-4 md:p-12 bg-slate-900/20 ${!isLast ? 'border-r' : ''} border-sky-900/50 relative transition-all duration-500 hover:bg-slate-900/40 group overflow-hidden`}>
       <div className={`absolute top-0 ${side === 'left' ? 'left-0' : 'right-0'} w-px h-full bg-emerald-500/10 group-hover:bg-emerald-500/30 transition-colors pointer-events-none`} />
       
+      {/* Games Won Tracker */}
+      <AnimatePresence>
+        {showGames && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+            animate={{ height: 'auto', opacity: 1, marginBottom: 24 }}
+            exit={{ height: 0, opacity: 0, marginBottom: 0 }}
+            className="flex flex-col items-center overflow-hidden"
+          >
+            <span className="text-[10px] text-slate-500 tracking-[0.2em] uppercase mb-2">Jogos Ganhos</span>
+            <div className="flex items-center gap-6">
+              <button 
+                onClick={() => onUpdateGames(-1)}
+                className="w-10 h-10 flex items-center justify-center rounded-md border border-slate-700 bg-slate-800 text-slate-400 hover:text-white hover:border-slate-500 transition-all active:scale-90"
+              >
+                <Minus size={20} />
+              </button>
+              <motion.span 
+                key={team.games}
+                initial={{ scale: 1.5, color: '#10b981' }}
+                animate={{ scale: 1, color: '#e2e8f0' }}
+                className="text-4xl font-black tabular-nums"
+              >
+                {team.games}
+              </motion.span>
+              <button 
+                onClick={() => onUpdateGames(1)}
+                className="w-10 h-10 flex items-center justify-center rounded-md border border-slate-700 bg-slate-800 text-slate-400 hover:text-white hover:border-slate-500 transition-all active:scale-90"
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <input 
         type="text" 
         value={team.name} 
