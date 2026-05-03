@@ -4,10 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Pause, RotateCcw, Plus, Minus, Edit2, Check } from 'lucide-react';
 
-const INITIAL_TIME = 60;
-
 export default function Home() {
-  const [timeLeft, setTimeLeft] = useState(INITIAL_TIME);
+  const [initialTime, setInitialTime] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [isRunning, setIsRunning] = useState(false);
   
   const [teamA, setTeamA] = useState({ name: 'TIME A', score: 0, isEditing: false });
@@ -20,15 +19,13 @@ export default function Home() {
       const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
       const audioCtx = new AudioContextClass();
       
-      // Create a sequence of beeps for 2 seconds
       const duration = 2;
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
 
       oscillator.type = 'square';
-      oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+      oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); 
       
-      // Siren effect
       oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.5);
       oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 1.0);
       oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 1.5);
@@ -55,12 +52,7 @@ export default function Home() {
       if ('wakeLock' in navigator) {
         try {
           wakeLock = await (navigator as any).wakeLock.request('screen');
-          wakeLock.addEventListener('release', () => {
-            console.log('Screen Wake Lock released');
-          });
-          console.log('Screen Wake Lock acquired');
         } catch (err: any) {
-          // Silently ignore permission errors to prevent console spam in restricted environments
           if (err.name !== 'NotAllowedError') {
             console.error(`${err.name}, ${err.message}`);
           }
@@ -111,8 +103,14 @@ export default function Home() {
   const toggleTimer = () => setIsRunning(!isRunning);
   
   const resetTimer = () => {
-    setTimeLeft(INITIAL_TIME);
+    setTimeLeft(initialTime);
     setIsRunning(true);
+  };
+
+  const setDuration = (seconds: number) => {
+    setIsRunning(false);
+    setInitialTime(seconds);
+    setTimeLeft(seconds);
   };
 
   const formatTime = (seconds: number) => {
@@ -146,22 +144,40 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden border-8 border-slate-900">
+    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden border-8 border-sky-500/30">
       {/* Header Navigation */}
-      <nav className="flex justify-between items-center px-6 md:px-12 py-6 border-b border-slate-800 bg-slate-950 z-20">
+      <nav className="flex justify-between items-center px-6 md:px-12 py-6 border-b border-sky-900/50 bg-slate-950 z-20">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-          <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase opacity-60">Mordendo a lingua</span>
+          <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase opacity-60">Mordendo a Língua</span>
         </div>
-        <div className="text-[10px] md:text-xs font-mono opacity-40 hidden sm:block">FIELD-ID: 4492-X</div>
+        <div className="text-[10px] md:text-xs font-mono opacity-40 hidden sm:block">ID-CAMPO: 4492-X</div>
       </nav>
 
       {/* Main Control Area */}
       <div className="flex-1 flex flex-col z-10">
         
         {/* Timer Block - Geometric Center */}
-        <div className="flex flex-col items-center justify-center py-8 md:py-12 px-4">
-          <div className="text-slate-500 text-[10px] tracking-[0.4em] uppercase mb-2">controlador de tempo</div>
+        <div className="flex flex-col items-center justify-center py-6 md:py-12 px-4">
+          <div className="text-slate-500 text-[10px] tracking-[0.4em] uppercase mb-1">controlador de tempo</div>
+          
+          {/* Duration Selectors */}
+          <div className="flex gap-2 mb-4">
+            {[60, 120, 180, 300].map((sec) => (
+              <button
+                key={sec}
+                onClick={() => setDuration(sec)}
+                className={`px-3 py-1 text-[10px] font-bold border rounded-sm transition-all ${
+                  initialTime === sec 
+                  ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' 
+                  : 'border-slate-800 text-slate-500 hover:border-slate-700'
+                }`}
+              >
+                {sec / 60}:00
+              </button>
+            ))}
+          </div>
+
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -195,7 +211,7 @@ export default function Home() {
         </div>
 
       {/* Scoreboard Grid */}
-      <div className="grid grid-cols-2 flex-1 border-t border-slate-800">
+      <div className="grid grid-cols-2 flex-1 border-t border-sky-900/50">
         <AnimatePresence>
           {timeLeft === 0 && !isRunning && (
             <motion.div 
@@ -241,11 +257,11 @@ export default function Home() {
       </div>
 
       {/* Footer Details */}
-      <footer className="flex justify-between px-6 md:px-12 py-4 bg-slate-900 text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 border-t border-slate-800">
-        <div>Session active: {isRunning ? 'RUNNING' : 'IDLE'}</div>
+      <footer className="flex justify-between px-6 md:px-12 py-4 bg-slate-900 text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 border-t border-sky-900/50">
+        <div>Sessão ativa: {isRunning ? 'EM OPERAÇÃO' : 'INATIVO'}</div>
         <div className="flex gap-4 md:gap-8">
-          <span>Ruleset: Standard</span>
-          <span className="hidden sm:inline">Referee: Auto-Sync</span>
+          <span>Regras: Padrão</span>
+          <span className="hidden sm:inline">Árbitro: Auto-Sinc</span>
         </div>
       </footer>
     </main>
@@ -255,7 +271,7 @@ export default function Home() {
 
 function TeamPanel({ team, side, isLast, onUpdateScore, onNameChange }: any) {
   return (
-    <div className={`flex flex-col items-center justify-center p-4 md:p-12 bg-slate-900/20 ${!isLast ? 'border-r' : ''} border-slate-800 relative transition-all duration-500 hover:bg-slate-900/40 group overflow-hidden`}>
+    <div className={`flex flex-col items-center justify-center p-4 md:p-12 bg-slate-900/20 ${!isLast ? 'border-r' : ''} border-sky-900/50 relative transition-all duration-500 hover:bg-slate-900/40 group overflow-hidden`}>
       <div className={`absolute top-0 ${side === 'left' ? 'left-0' : 'right-0'} w-px h-full bg-emerald-500/10 group-hover:bg-emerald-500/30 transition-colors pointer-events-none`} />
       
       <input 
