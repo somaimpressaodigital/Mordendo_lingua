@@ -106,7 +106,6 @@ export default function Home() {
   
   const resetTimer = () => {
     setTimeLeft(initialTime);
-    setIsRunning(true);
   };
 
   const setDuration = (seconds: number) => {
