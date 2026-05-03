@@ -9,7 +9,7 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [isRunning, setIsRunning] = useState(false);
   const [isWakeLockActive, setIsWakeLockActive] = useState(false);
-  const [showGamesTracker, setShowGamesTracker] = useState(true);
+  const [showGamesTracker, setShowGamesTracker] = useState(false);
   
   const [teamA, setTeamA] = useState({ name: 'TIME A', score: 0, games: 0, isEditing: false });
   const [teamB, setTeamB] = useState({ name: 'TIME B', score: 0, games: 0, isEditing: false });
