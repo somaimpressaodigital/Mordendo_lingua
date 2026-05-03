@@ -8,6 +8,7 @@ export default function Home() {
   const [initialTime, setInitialTime] = useState(60);
   const [timeLeft, setTimeLeft] = useState(60);
   const [isRunning, setIsRunning] = useState(false);
+  const [isWakeLockActive, setIsWakeLockActive] = useState(false);
   
   const [teamA, setTeamA] = useState({ name: 'TIME A', score: 0, isEditing: false });
   const [teamB, setTeamB] = useState({ name: 'TIME B', score: 0, isEditing: false });
@@ -61,12 +62,12 @@ export default function Home() {
     };
 
     const handleVisibilityChange = async () => {
-      if (wakeLock !== null && document.visibilityState === 'visible' && isRunning) {
+      if (wakeLock !== null && document.visibilityState === 'visible' && (isRunning || isWakeLockActive)) {
         await requestWakeLock();
       }
     };
 
-    if (isRunning) {
+    if (isRunning || isWakeLockActive) {
       requestWakeLock();
       document.addEventListener('visibilitychange', handleVisibilityChange);
     }
@@ -77,7 +78,7 @@ export default function Home() {
         wakeLock.release().catch(() => {});
       }
     };
-  }, [isRunning]);
+  }, [isRunning, isWakeLockActive]);
 
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
@@ -151,7 +152,19 @@ export default function Home() {
           <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
           <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase opacity-60">Mordendo a Língua</span>
         </div>
-        <div className="text-[10px] md:text-xs font-mono opacity-40 hidden sm:block">ID-CAMPO: 4492-X</div>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsWakeLockActive(!isWakeLockActive)}
+            className={`flex items-center gap-3 px-6 py-3 rounded-full border transition-all text-xs md:text-sm font-bold uppercase tracking-wider ${
+              isWakeLockActive 
+              ? 'bg-sky-500/20 border-sky-500 text-sky-400' 
+              : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600 hover:bg-slate-800'
+            }`}
+          >
+            <div className={`w-2.5 h-2.5 rounded-full ${isWakeLockActive ? 'bg-sky-500 animate-pulse' : 'bg-slate-700'}`} />
+            Manter tela acesa
+          </button>
+        </div>
       </nav>
 
       {/* Main Control Area */}
@@ -261,7 +274,6 @@ export default function Home() {
         <div>Sessão ativa: {isRunning ? 'EM OPERAÇÃO' : 'INATIVO'}</div>
         <div className="flex gap-4 md:gap-8">
           <span>Regras: Padrão</span>
-          <span className="hidden sm:inline">Árbitro: Auto-Sinc</span>
         </div>
       </footer>
     </main>
